@@ -5,10 +5,9 @@ import "@contracts/interfaces/IAavePool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract AaveAdapter {
-    
     IAavePool public pool;
     address public router;
-    
+
     constructor(address _router, address _pool) {
         pool = IAavePool(_pool);
         router = _router;
@@ -31,7 +30,7 @@ contract AaveAdapter {
     function calculateAPY(address asset) public view returns (uint256 apy) {
         // Get APR first
         uint256 apr = calculateAPR(asset);
-        
+
         // Simple approximation: APY ≈ APR + (APR^2 / 20000)
         // This is accurate for small rates and avoids overflow
         if (apr > 0) {
@@ -41,14 +40,14 @@ contract AaveAdapter {
             apy = 0;
         }
     }
-    
+
     /// @notice Calculate APR (simple interest) for comparison
     /// @param asset The asset address
     /// @return apr APR as basis points (e.g., 500 = 5.00%)
     function calculateAPR(address asset) public view returns (uint256 apr) {
         IAavePool.ReserveData memory data = pool.getReserveData(asset);
         uint256 liquidityRate = uint256(data.currentLiquidityRate);
-        
+
         // APR = rate * seconds_per_year * 10000 / 1e27
         apr = (liquidityRate * 365 days * 10000) / 1e27;
     }

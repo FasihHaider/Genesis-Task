@@ -5,22 +5,20 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@contracts/interfaces/IAdapter.sol";
 
 contract YieldRouter {
-    
     struct userDeposit {
         address adapter;
         address asset;
         uint256 amount;
     }
-    
+
     mapping(address => userDeposit) public userDeposits;
 
     address[] public adapters;
 
     event Deposited(address indexed user, uint256 amount, uint256 apy, uint256 apr);
     event Withdrawn(address indexed user, uint256 amount);
-    
-    constructor() {
-    }
+
+    constructor() {}
 
     function addAdapter(address adapter) external {
         adapters.push(adapter);
@@ -48,5 +46,4 @@ contract YieldRouter {
         userDeposits[msg.sender].asset = asset;
         userDeposits[msg.sender].amount += amount;
     }
-
 }
