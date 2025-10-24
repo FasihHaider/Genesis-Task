@@ -27,7 +27,7 @@ contract YieldRouterTest is Test {
 
         router = new YieldRouter();
         aaveAdapter = new AaveAdapter(address(router), AAVE_POOL);
-        router.addAdapter(address(aaveAdapter));
+        router.addAdapter(address(aaveAdapter), "Aave");
         deal(DAI, user1, 10000e6);
 
         vm.label(user1, "User1");

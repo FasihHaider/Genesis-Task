@@ -23,11 +23,13 @@ contract AaveAdapter is IAdapter {
         emit Deposited(msg.sender, asset, amount);
     }
 
-    function withdraw(address asset, uint256 amount) external {
+    function withdraw(address asset, uint256 amount) external returns (uint256) {
         uint256 withdrawAmount = pool.withdraw(asset, amount, address(this));
         require(IERC20(asset).transfer(msg.sender, withdrawAmount), "Transfer failed");
 
         emit Withdrawn(msg.sender, asset, amount);
+
+        return withdrawAmount;
     }
 
     /// @notice Calculate APR (simple interest) for comparison

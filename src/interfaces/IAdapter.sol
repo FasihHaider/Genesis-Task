@@ -6,7 +6,7 @@ interface IAdapter {
 
     function deposit(address asset, uint256 amount) external;
 
-    function withdraw(address asset, uint256 amount) external;
+    function withdraw(address asset, uint256 amount) external returns (uint256);
 
     function getAPY(address asset) external view returns (uint256);
 

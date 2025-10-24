@@ -46,7 +46,7 @@ contract CompoundAdapter is IAdapter {
         emit Deposited(msg.sender, asset, amount);
     }
 
-    function withdraw(address asset, uint256 amount) external {
+    function withdraw(address asset, uint256 amount) external returns (uint256) {
         require(amount > 0, "zero amount");
         address cTokenAddr = _getCToken(asset);
 
@@ -56,6 +56,8 @@ contract CompoundAdapter is IAdapter {
         require(IERC20(asset).transfer(msg.sender, withdrawAmount), "transfer failed");
 
         emit Withdrawn(msg.sender, asset, amount);
+
+        return withdrawAmount;
     }
 
     function getAPR(address asset) public view returns (uint256 apr) {
