@@ -8,9 +8,9 @@ interface IAdapter {
 
     function withdraw(address asset, uint256 amount) external returns (uint256);
 
-    function getAPY(address asset) external view returns (uint256);
+    function getAPY(address asset) external returns (uint256);
 
-    event Deposited(address indexed user, address indexed asset, uint256 amount);
+    event Deposit(address indexed user, address indexed asset, uint256 amount);
 
-    event Withdrawn(address indexed user, address indexed asset, uint256 amount);
+    event Withdraw(address indexed user, address indexed asset, uint256 amount);
 }

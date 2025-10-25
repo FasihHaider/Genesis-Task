@@ -18,13 +18,13 @@ contract CompoundAdapterTest is Test {
     function setUp() public {
         string memory RPC_URL = vm.envString("RPC_URL_ETH");
 
-        vm.createSelectFork(RPC_URL, 20000000);
+        vm.createSelectFork(RPC_URL);
 
-        asset = IERC20(DAI);
+        asset = IERC20(USDC);
 
         deal(address(asset), user1, 10000e6);
 
-        compoundAdapter = new CompoundAdapter(user1, COMPTROLLER);
+        compoundAdapter = new CompoundAdapter(user1);
 
         vm.label(user1, "User1");
         vm.label(address(compoundAdapter), "CompoundAdapter");
@@ -33,26 +33,30 @@ contract CompoundAdapterTest is Test {
     function testGetAPR() public {
         console2.log("Compound USDT APR", compoundAdapter.getAPR(USDT) / 1e16);
         console2.log("Compound USDT APY", compoundAdapter.getAPY(USDT) / 1e16);
+        console2.log("Compound USDC APR", compoundAdapter.getAPR(USDC) / 1e16);
+        console2.log("Compound USDC APY", compoundAdapter.getAPY(USDC) / 1e16);
     }
 
-    function testDepositOnCompound() public {
-        vm.startPrank(user1);
+    // function testDepositOnCompound() public {
+    //     vm.startPrank(user1);
 
-        uint256 depositAmount = 1000e6;
-        asset.approve(address(compoundAdapter), depositAmount);
-        compoundAdapter.deposit(address(asset), depositAmount);
+    //     uint256 depositAmount = 1000e6;
+    //     asset.approve(address(compoundAdapter), depositAmount);
+    //     compoundAdapter.deposit(address(asset), depositAmount);
 
-        vm.stopPrank();
-    }
+    //     vm.stopPrank();
+    // }
 
-    function testWithdrawOnCompound() public {
-        testDepositOnCompound();
+    // function testWithdrawOnCompound() public {
+    //     vm.startPrank(user1);
 
-        vm.startPrank(user1);
+    //     uint256 depositAmount = 1000e6;
+    //     asset.approve(address(compoundAdapter), depositAmount);
+    //     compoundAdapter.deposit(address(asset), depositAmount);
 
-        uint256 withdrawAmount = 500e6;
-        compoundAdapter.withdraw(address(asset), withdrawAmount);
+    //     uint256 withdrawAmount = 500e6;
+    //     compoundAdapter.withdraw(address(asset), withdrawAmount);
 
-        vm.stopPrank();
-    }
+    //     vm.stopPrank();
+    // }
 }

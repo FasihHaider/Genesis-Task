@@ -34,7 +34,9 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
         uint256 newAmount
     );
 
-    constructor() Ownable(msg.sender) ERC20Rescuer(msg.sender) {}
+    constructor() Ownable(msg.sender) ERC20Rescuer(msg.sender) {
+        feeReceiver = msg.sender;
+    }
 
     function addAdapter(address adapter, string memory name) external onlyOwner {
         require(adapter != address(0), "zero address");
@@ -63,7 +65,11 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
         protocolFee = newFee;
     }
 
-    function getBestAdapter(address asset) public view returns (address) {
+    function setFeeReceiver(address newFeeReceiver) external onlyOwner {
+        feeReceiver = newFeeReceiver;
+    }
+
+    function getBestAdapter(address asset) public returns (address) {
         uint256 highestAPY = 0;
         uint256 adapterIndex;
         for (uint256 i = 0; i < adapters.length; i++) {
@@ -113,11 +119,9 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
         }
         delete userDeposits[msg.sender];
 
-        require(
-            IERC20(asset).transferFrom(address(this), msg.sender, withdrawAmount - protocolAmount), "transfer failed"
-        );
+        require(IERC20(asset).transfer(msg.sender, withdrawAmount - protocolAmount), "transfer failed");
 
-        emit Withdrawn(msg.sender, adapter, amount);
+        emit Withdrawn(msg.sender, adapter, withdrawAmount);
     }
 
     function rebalance(address user, address asset) public {
@@ -147,7 +151,7 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
         IERC20Rescuer(adapter).rescueERC20(token, to, amount);
     }
 
-    function _validateRebalancing(address asset, address currentAdapter, address newAdapter) internal view {
+    function _validateRebalancing(address asset, address currentAdapter, address newAdapter) internal {
         require(currentAdapter != newAdapter, "no rebalancing required");
         uint256 currentAPY = IAdapter(currentAdapter).getAPY(asset);
         uint256 newAPY = IAdapter(newAdapter).getAPY(asset);

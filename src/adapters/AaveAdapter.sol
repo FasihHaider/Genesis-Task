@@ -30,14 +30,14 @@ contract AaveAdapter is IAdapter, ERC20Rescuer {
         IERC20(asset).approve(address(pool), amount);
         pool.supply(asset, amount, address(this), 0);
 
-        emit Deposited(msg.sender, asset, amount);
+        emit Deposit(msg.sender, asset, amount);
     }
 
     function withdraw(address asset, uint256 amount) external onlyRouter returns (uint256) {
         uint256 withdrawAmount = pool.withdraw(asset, amount, address(this));
         require(IERC20(asset).transfer(msg.sender, withdrawAmount), "Transfer failed");
 
-        emit Withdrawn(msg.sender, asset, amount);
+        emit Withdraw(msg.sender, asset, amount);
 
         return withdrawAmount;
     }
