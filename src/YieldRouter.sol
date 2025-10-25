@@ -5,8 +5,9 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@contracts/interfaces/IAdapter.sol";
+import "@contracts/ERC20Rescuer.sol";
 
-contract YieldRouter is Ownable2Step, ReentrancyGuard {
+contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
     struct userDeposit {
         address adapter;
         address asset;
@@ -33,7 +34,7 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard {
         uint256 newAmount
     );
 
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) ERC20Rescuer(msg.sender) {}
 
     function addAdapter(address adapter, string memory name) external onlyOwner {
         require(adapter != address(0), "zero address");
@@ -57,6 +58,11 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard {
         delete adapterNames[adapter];
     }
 
+    function setProtocolFee(uint256 newFee) external onlyOwner {
+        require(newFee < BASIS_POINTS / 2, "max fee exceeded");
+        protocolFee = newFee;
+    }
+
     function getBestAdapter(address asset) public view returns (address) {
         uint256 highestAPY = 0;
         uint256 adapterIndex;
@@ -74,9 +80,11 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard {
         require(amount > 0, "zero amount");
         address adapter = getBestAdapter(asset);
         if (userDeposits[msg.sender].amount > 0) {
+            // user can increase its deposit
             require(userDeposits[msg.sender].asset == asset, "asset mismatch");
-            // rebalance required here
-            require(userDeposits[msg.sender].adapter == adapter, "protocol mismatch");
+            if (adapter != userDeposits[msg.sender].adapter) {
+                rebalance(msg.sender, asset);
+            }
         }
         require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "transfer failed");
 
@@ -112,7 +120,7 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard {
         emit Withdrawn(msg.sender, adapter, amount);
     }
 
-    function rebalance(address user, address asset) public nonReentrant {
+    function rebalance(address user, address asset) public {
         require(userDeposits[user].amount > 0, "no deposit found");
         require(msg.sender == user || rebalancers[user][msg.sender], "not allowed");
         address currentAdapter = userDeposits[msg.sender].adapter;
@@ -135,10 +143,14 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard {
         rebalancers[msg.sender][rebalancer] = status;
     }
 
+    function rescueERC20FromAdapter(address adapter, address token, address to, uint256 amount) external onlyOwner {
+        IERC20Rescuer(adapter).rescueERC20(token, to, amount);
+    }
+
     function _validateRebalancing(address asset, address currentAdapter, address newAdapter) internal view {
         require(currentAdapter != newAdapter, "no rebalancing required");
         uint256 currentAPY = IAdapter(currentAdapter).getAPY(asset);
         uint256 newAPY = IAdapter(newAdapter).getAPY(asset);
-        require(newAPY > currentAPY && newAPY - currentAPY > 1000, "apy difference negligible");
+        require(newAPY > currentAPY && newAPY - currentAPY >= (currentAPY / 100), "yield increase < 1%");
     }
 }

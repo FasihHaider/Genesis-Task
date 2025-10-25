@@ -5,15 +5,21 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@contracts/interfaces/ICToken.sol";
 import "@contracts/interfaces/IComptroller.sol";
 import "@contracts/interfaces/IAdapter.sol";
+import "@contracts/Utils.sol";
+import "@contracts/ERC20Rescuer.sol";
 
-contract CompoundAdapter is IAdapter {
+contract CompoundAdapter is IAdapter, ERC20Rescuer {
     uint256 public constant BLOCKS_PER_YEAR = 2_300_000;
-    uint256 public constant EXP_SCALE = 1e18;
 
     address public comptroller;
     address public router;
 
-    constructor(address _router, address _comptroller) {
+    modifier onlyRouter() {
+        require(msg.sender == router, "only router");
+        _;
+    }
+
+    constructor(address _router, address _comptroller) ERC20Rescuer(_router) {
         router = _router;
         comptroller = _comptroller;
     }
@@ -33,7 +39,7 @@ contract CompoundAdapter is IAdapter {
         revert("Asset not supported on Compound");
     }
 
-    function deposit(address asset, uint256 amount) external {
+    function deposit(address asset, uint256 amount) external onlyRouter {
         require(amount > 0, "zero amount");
         require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "transfer failed");
         address cTokenAddr = _getCToken(asset);
@@ -46,7 +52,7 @@ contract CompoundAdapter is IAdapter {
         emit Deposited(msg.sender, asset, amount);
     }
 
-    function withdraw(address asset, uint256 amount) external returns (uint256) {
+    function withdraw(address asset, uint256 amount) external onlyRouter returns (uint256) {
         require(amount > 0, "zero amount");
         address cTokenAddr = _getCToken(asset);
 
@@ -63,45 +69,11 @@ contract CompoundAdapter is IAdapter {
     function getAPR(address asset) public view returns (uint256 apr) {
         address cTokenAddr = _getCToken(asset);
         uint256 ratePerBlock = ICToken(cTokenAddr).supplyRatePerBlock();
-        apr = ratePerBlock * BLOCKS_PER_YEAR; // ~annualized, 1e18 scale
+        apr = ratePerBlock * BLOCKS_PER_YEAR * 1e2; // convert to 1e18 percent
     }
 
-    function getAPY(address asset) external view returns (uint256 apy) {
-        address cTokenAddr = _getCToken(asset);
-        uint256 ratePerBlock = ICToken(cTokenAddr).supplyRatePerBlock();
-        uint256 onePlusRate = EXP_SCALE + ratePerBlock;
-        uint256 power = rpow(onePlusRate, BLOCKS_PER_YEAR, EXP_SCALE);
-        apy = power - EXP_SCALE;
-    }
-
-    function rpow(uint256 x, uint256 n, uint256 base) internal pure returns (uint256 z) {
-        assembly {
-            switch x
-            case 0 {
-                switch n
-                case 0 { z := base }
-                default { z := 0 }
-            }
-            default {
-                switch mod(n, 2)
-                case 0 { z := base }
-                default { z := x }
-                let half := div(base, 2)
-                for { n := div(n, 2) } n { n := div(n, 2) } {
-                    let xx := mul(x, x)
-                    if iszero(eq(div(xx, x), x)) { revert(0, 0) }
-                    let xxRound := add(xx, half)
-                    if lt(xxRound, xx) { revert(0, 0) }
-                    x := div(xxRound, base)
-                    if mod(n, 2) {
-                        let zx := mul(z, x)
-                        if iszero(eq(div(zx, x), z)) { revert(0, 0) }
-                        let zxRound := add(zx, half)
-                        if lt(zxRound, zx) { revert(0, 0) }
-                        z := div(zxRound, base)
-                    }
-                }
-            }
-        }
+    function getAPY(address asset) public view returns (uint256 apy) {
+        uint256 apr = getAPR(asset);
+        apy = Utils.aprToApy(apr);
     }
 }
