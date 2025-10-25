@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@contracts/interfaces/IAdapter.sol";
+import "@contracts/interfaces/ICompoundAdapter.sol";
 import "@contracts/ERC20Rescuer.sol";
 
 contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
@@ -134,17 +135,22 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
         uint256 currentAmount = userDeposits[msg.sender].amount;
         uint256 withdrawAmount = IAdapter(currentAdapter).withdraw(asset, currentAmount);
 
+        IERC20(asset).approve(address(newAdapter), withdrawAmount);
         IAdapter(newAdapter).deposit(asset, withdrawAmount);
 
         userDeposits[msg.sender].adapter = newAdapter;
         userDeposits[msg.sender].asset = asset;
-        userDeposits[msg.sender].amount += withdrawAmount;
+        userDeposits[msg.sender].amount = withdrawAmount;
 
         emit Rebalanced(msg.sender, currentAdapter, newAdapter, currentAmount, withdrawAmount);
     }
 
     function setRebalancer(address rebalancer, bool status) external {
         rebalancers[msg.sender][rebalancer] = status;
+    }
+
+    function addCToken(address compoundAdapter, address asset, address cAsset) external onlyOwner {
+        ICompoundAdapter(compoundAdapter).addCToken(asset, cAsset);
     }
 
     function rescueERC20FromAdapter(address adapter, address token, address to, uint256 amount) external onlyOwner {

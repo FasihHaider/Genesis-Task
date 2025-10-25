@@ -30,7 +30,9 @@ contract AaveAdapterTest is Test {
         vm.label(address(aaveAdapter), "AaveAdapter");
     }
 
-    function testGetAPR() public {
+    function testGetAPR() public view {
+        console2.log("Aave USDT APR", aaveAdapter.getAPR(USDT) / 1e16);
+        console2.log("Aave USDT APY", aaveAdapter.getAPY(USDT) / 1e16);
         console2.log("Aave USDC APR", aaveAdapter.getAPR(USDC) / 1e16);
         console2.log("Aave USDC APY", aaveAdapter.getAPY(USDC) / 1e16);
     }

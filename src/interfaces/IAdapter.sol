@@ -8,6 +8,8 @@ interface IAdapter {
 
     function withdraw(address asset, uint256 amount) external returns (uint256);
 
+    function getAPR(address asset) external returns (uint256);
+
     function getAPY(address asset) external returns (uint256);
 
     event Deposit(address indexed user, address indexed asset, uint256 amount);

@@ -8,9 +8,6 @@ import "@contracts/Utils.sol";
 import "@contracts/ERC20Rescuer.sol";
 
 contract AaveAdapter is IAdapter, ERC20Rescuer {
-    uint256 constant WAD = 1e19;
-    uint256 constant PERIODS_PER_YEAR = 365;
-
     IAavePool public pool;
     address public router;
 
