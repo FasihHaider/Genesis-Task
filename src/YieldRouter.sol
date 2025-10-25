@@ -13,6 +13,7 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
         address adapter;
         address asset;
         uint256 amount;
+        uint256 wrappedAmount;
     }
 
     mapping(address => userDeposit) public userDeposits;
@@ -97,11 +98,12 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
 
         IERC20(asset).approve(address(adapter), amount);
 
-        IAdapter(adapter).deposit(asset, amount);
+        uint256 wrappedAmount = IAdapter(adapter).deposit(asset, amount);
 
         userDeposits[msg.sender].adapter = adapter;
         userDeposits[msg.sender].asset = asset;
         userDeposits[msg.sender].amount += amount;
+        userDeposits[msg.sender].wrappedAmount += wrappedAmount;
 
         emit Deposited(msg.sender, adapter, amount);
     }

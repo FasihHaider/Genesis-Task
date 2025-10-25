@@ -51,12 +51,13 @@ contract YieldRouterTest is Test {
         // deposit again
         // router.deposit(address(asset), depositAmount);
 
-        (address adapter, address token, uint256 amount) = router.userDeposits(user1);
+        (address adapter, address token, uint256 amount, uint256 wrapperAmount) = router.userDeposits(user1);
         assertEq(token, address(asset));
         assertEq(amount, depositAmount);
         console2.log("Adapter", router.adapterNames(adapter));
         console2.log("Asset", token);
         console2.log("Amount", amount);
+        console2.log("Wrapper Amount", wrapperAmount);
 
         vm.stopPrank();
     }
@@ -88,9 +89,10 @@ contract YieldRouterTest is Test {
 
         router.rebalance(user1, address(asset));
 
-        (address adapter, address token, uint256 amount) = router.userDeposits(user1);
+        (address adapter, address token, uint256 amount, uint256 wrapperAmount) = router.userDeposits(user1);
         console2.log("Adapter", router.adapterNames(adapter));
         console2.log("Asset", token);
         console2.log("Amount", amount);
+        console2.log("Wrapper Amount", wrapperAmount);
     }
 }

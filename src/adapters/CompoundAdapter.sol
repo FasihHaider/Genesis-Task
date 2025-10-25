@@ -24,16 +24,19 @@ contract CompoundAdapter is IAdapter, ERC20Rescuer {
         cToken[asset] = cAsset;
     }
 
-    function deposit(address asset, uint256 amount) external onlyRouter {
+    function deposit(address asset, uint256 amount) external onlyRouter returns (uint256) {
         require(amount > 0, "zero amount");
         require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "transfer failed");
         address cTokenAddr = cToken[asset];
 
         IERC20(asset).approve(address(cTokenAddr), amount);
 
+        uint256 balanceBefore = IERC20(cTokenAddr).balanceOf(address(this));
         ICToken(cTokenAddr).supply(asset, amount);
 
         emit Deposit(msg.sender, asset, amount);
+
+        return IERC20(cTokenAddr).balanceOf(address(this)) - balanceBefore;
     }
 
     function withdraw(address asset, uint256 amount) external onlyRouter returns (uint256) {

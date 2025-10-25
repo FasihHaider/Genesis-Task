@@ -21,13 +21,18 @@ contract AaveAdapter is IAdapter, ERC20Rescuer {
         pool = IAavePool(_pool);
     }
 
-    function deposit(address asset, uint256 amount) external onlyRouter {
+    function deposit(address asset, uint256 amount) external onlyRouter returns (uint256) {
         require(amount > 0, "zero amount");
         require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "transfer failed");
         IERC20(asset).approve(address(pool), amount);
+        IAavePool.ReserveData memory data = pool.getReserveData(asset);
+        address aToken = address(data.aTokenAddress);
+        uint256 balanceBefore = IERC20(aToken).balanceOf(address(this));
         pool.supply(asset, amount, address(this), 0);
 
         emit Deposit(msg.sender, asset, amount);
+
+        return IERC20(aToken).balanceOf(address(this)) - balanceBefore;
     }
 
     function withdraw(address asset, uint256 amount) external onlyRouter returns (uint256) {
