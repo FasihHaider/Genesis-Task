@@ -16,7 +16,8 @@ contract AaveAdapterTest is Test {
     IERC20 public asset;
 
     function setUp() public {
-        string memory RPC_URL = vm.envString("RPC_URL_ETH");
+        // string memory RPC_URL = vm.envString("RPC_URL_ETH");
+        string memory RPC_URL = "https://eth-mainnet.g.alchemy.com/v2/pxeN5Fxf0QZPlMJ7dmN7RhjzDuKTRtWD"; // not recommended but foundry ci/cd fails
 
         vm.createSelectFork(RPC_URL, 20000000);
 
