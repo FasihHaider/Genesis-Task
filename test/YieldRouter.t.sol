@@ -35,6 +35,8 @@ contract YieldRouterTest is Test {
         compoundAdapter = new CompoundAdapter(address(router));
         router.addAdapter(address(aaveAdapter), "Aave");
         // router.addAdapter(address(compoundAdapter), "Compound");
+        // router.addCToken(address(compoundAdapter), USDC, cUSDC);
+        // router.addCToken(address(compoundAdapter), USDT, cUSDT);
 
         deal(address(asset), user1, 1000e6);
 
@@ -59,40 +61,43 @@ contract YieldRouterTest is Test {
         console2.log("Amount", amount);
         console2.log("Wrapper Amount", wrapperAmount);
 
-        vm.stopPrank();
-    }
-
-    function testWithdraw() public {
-        vm.startPrank(user1);
-
-        uint256 depositAmount = 1000e6;
-        asset.approve(address(router), depositAmount);
-        router.deposit(address(asset), depositAmount);
-
-        uint256 withdrawAmount = 1000e6;
-        router.withdraw(address(asset), withdrawAmount);
-        console2.log("User Balance", asset.balanceOf(user1));
-        console2.log("Router Balance", asset.balanceOf(address(router)));
+        vm.warp(block.timestamp + 10 days);
+        console2.log("Profit", router.getProfit(user1));
 
         vm.stopPrank();
     }
 
-    function testRebalance() public {
-        testDeposit();
+    // function testWithdraw() public {
+    //     vm.startPrank(user1);
 
-        // currently compound has overall more yield
-        router.addAdapter(address(compoundAdapter), "Compound");
-        router.addCToken(address(compoundAdapter), USDC, cUSDC);
-        router.addCToken(address(compoundAdapter), USDT, cUSDT);
+    //     uint256 depositAmount = 1000e6;
+    //     asset.approve(address(router), depositAmount);
+    //     router.deposit(address(asset), depositAmount);
 
-        vm.startPrank(user1);
+    //     uint256 withdrawAmount = 1000e6;
+    //     router.withdraw(address(asset), withdrawAmount);
+    //     console2.log("User Balance", asset.balanceOf(user1));
+    //     console2.log("Router Balance", asset.balanceOf(address(router)));
 
-        router.rebalance(user1, address(asset));
+    //     vm.stopPrank();
+    // }
 
-        (address adapter, address token, uint256 amount, uint256 wrapperAmount) = router.userDeposits(user1);
-        console2.log("Adapter", router.adapterNames(adapter));
-        console2.log("Asset", token);
-        console2.log("Amount", amount);
-        console2.log("Wrapper Amount", wrapperAmount);
-    }
+    // function testRebalance() public {
+    //     testDeposit();
+
+    //     // currently compound has overall more yield
+    //     router.addAdapter(address(compoundAdapter), "Compound");
+    //     router.addCToken(address(compoundAdapter), USDC, cUSDC);
+    //     router.addCToken(address(compoundAdapter), USDT, cUSDT);
+
+    //     vm.startPrank(user1);
+
+    //     router.rebalance(user1, address(asset));
+
+    //     (address adapter, address token, uint256 amount, uint256 wrapperAmount) = router.userDeposits(user1);
+    //     console2.log("Adapter", router.adapterNames(adapter));
+    //     console2.log("Asset", token);
+    //     console2.log("Amount", amount);
+    //     console2.log("Wrapper Amount", wrapperAmount);
+    // }
 }

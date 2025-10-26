@@ -54,4 +54,17 @@ contract AaveAdapter is IAdapter, ERC20Rescuer {
         uint256 apr = getAPR(asset);
         apy = Utils.aprToApy(apr);
     }
+
+    function getProfit(address asset, uint256 amount, uint256 wrappedAmount) external view returns (uint256 profit) {
+        IAavePool.ReserveData memory data = pool.getReserveData(asset);
+        uint256 liquidityIndex = uint256(data.liquidityIndex);
+
+        uint256 currentAmount = (wrappedAmount * liquidityIndex) / 1e27;
+
+        if (currentAmount > amount) {
+            profit = currentAmount - amount;
+        } else {
+            profit = 0;
+        }
+    }
 }

@@ -8,7 +8,7 @@ interface IAdapter {
 
     function withdraw(address asset, uint256 amount) external returns (uint256);
 
-    function getProfit(uint256 amount, uint256 wrapperAmount) external returns (uint256);
+    function getProfit(address asset, uint256 amount, uint256 wrapperAmount) external view returns (uint256);
 
     function getAPR(address asset) external returns (uint256);
 

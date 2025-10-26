@@ -10,6 +10,7 @@ import "@contracts/ERC20Rescuer.sol";
 contract CompoundAdapter is IAdapter, ERC20Rescuer {
     mapping(address => address) public cToken;
     address public router;
+    uint256 public totalDeposit;
 
     modifier onlyRouter() {
         require(msg.sender == router, "only router");
@@ -33,6 +34,7 @@ contract CompoundAdapter is IAdapter, ERC20Rescuer {
 
         uint256 balanceBefore = IERC20(cTokenAddr).balanceOf(address(this));
         ICToken(cTokenAddr).supply(asset, amount);
+        totalDeposit += amount;
 
         emit Deposit(msg.sender, asset, amount);
 
@@ -45,6 +47,7 @@ contract CompoundAdapter is IAdapter, ERC20Rescuer {
 
         uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
         ICToken(cTokenAddr).withdraw(asset, amount - 1);
+        totalDeposit -= amount;
         uint256 withdrawAmount = IERC20(asset).balanceOf(address(this)) - balanceBefore;
 
         require(IERC20(asset).transfer(msg.sender, withdrawAmount), "transfer failed");
@@ -64,5 +67,22 @@ contract CompoundAdapter is IAdapter, ERC20Rescuer {
     function getAPY(address asset) public returns (uint256 apy) {
         uint256 apr = getAPR(asset);
         apy = Utils.aprToApy(apr);
+    }
+
+    function getProfit(address asset, uint256 amount, uint256 wrappedAmount) external view returns (uint256 profit) {
+        address cTokenAddr = cToken[asset];
+        uint256 adapterBalance = IERC20(cTokenAddr).balanceOf(address(this));
+
+        if (adapterBalance == 0 || totalDeposit == 0 || wrappedAmount == 0) {
+            return 0;
+        }
+
+        uint256 currentAmount = (adapterBalance * amount) / totalDeposit;
+
+        if (currentAmount > amount) {
+            profit = currentAmount - amount;
+        } else {
+            profit = 0;
+        }
     }
 }
