@@ -1,19 +1,37 @@
-## Foundry
+## Yield Router
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+**The Yield Router is a Solidity-based smart contract system that automatically allocates a user’s deposited stablecoins (USDC / DAI) across leading DeFi protocols — Aave, Compound etc — based on real-time yield rates.**
 
-Foundry consists of:
+**It continuously monitors APYs across supported protocols, routes new deposits to the one offering the highest yield, and supports profit tracking and instant withdrawals.**
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Features
 
-## Documentation
+### 💸 Automatic Allocation
+Deposits are automatically directed to the protocol (Aave / Compound) with the highest current yield (APY).
 
-https://book.getfoundry.sh/
+### 📈 Real-time Yield Comparison
+Fetches live APY data from Aave and Compound adapters.
 
-## Usage
+### 🧾 Per-User Accounting
+Tracks each user’s deposit amount, allocated protocol, and accrued yield.
+
+### 🔄 Rebalancing
+Admin or automated bot can trigger rebalancing between protocols when APY difference exceeds a defined threshold (e.g. >1%).
+
+### 💰 Seamless Withdrawals
+Users can withdraw their deposits anytime and receive their principal + profit directly in the original stablecoin.
+
+### 🧱 Modular Adapter Architecture
+Each DeFi protocol (Aave, Compound, etc.) has its own adapter contract implementing a unified interface for deposit, withdraw, and rate queries.
+
+### 🔐 Security Built-in
+
+- Ownable: Admin privileges restricted to contract owner
+
+- ReentrancyGuard: Prevents reentrancy attacks
+
+- ERC20Rescue: Allows owner to recover stuck tokens safely
+
 
 ### Build
 
@@ -31,36 +49,4 @@ $ forge test
 
 ```shell
 $ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
 ```
