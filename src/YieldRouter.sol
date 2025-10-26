@@ -150,9 +150,8 @@ contract YieldRouter is Ownable2Step, ReentrancyGuard, ERC20Rescuer {
     function getProfit(address user) public view returns (uint256) {
         require(userDeposits[user].amount > 0, "no deposit found");
         address adapter = userDeposits[user].adapter;
-        uint256 profit = IAdapter(adapter).getProfit(
-            userDeposits[user].asset, userDeposits[user].amount, userDeposits[user].wrappedAmount
-        );
+        uint256 profit = IAdapter(adapter)
+            .getProfit(userDeposits[user].asset, userDeposits[user].amount, userDeposits[user].wrappedAmount);
         return profit;
     }
 
